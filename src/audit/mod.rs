@@ -1,8 +1,8 @@
 use std::{fs::File, io::Write};
 
 use chrono::{DateTime, Utc};
-use sysinfo::{System,Disks};
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use sysinfo::{Disks, System};
 
 #[derive(Debug, Serialize, Deserialize)] // Automatically derive Debug implementation
 pub struct SysResume {
