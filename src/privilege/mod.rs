@@ -2,7 +2,6 @@
 pub fn check_privileged() -> bool {
     // On Linux, check if the user ID is 0 (root)
 
-    use nix::libc;
     unsafe { libc::geteuid() == 0 }
 }
 
