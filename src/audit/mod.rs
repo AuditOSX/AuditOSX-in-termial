@@ -1,7 +1,10 @@
-use chrono::{DateTime, Utc};
-use sysinfo::System;
+use std::{fs::File, io::Write};
 
-#[derive(Debug)] // Automatically derive Debug implementation
+use chrono::{DateTime, Utc};
+use sysinfo::{System,Disks};
+use serde::{Serialize, Deserialize};
+
+#[derive(Debug, Serialize, Deserialize)] // Automatically derive Debug implementation
 pub struct SysResume {
     pub computer_name: Option<String>,
     pub domain_name: Option<String>,
@@ -16,7 +19,7 @@ pub struct SysResume {
     pub num_processors: usize,
     pub processor_description: String,
     pub total_memory: u64,
-    pub total_hard_drive: String,
+    pub total_hard_drive: u64,
     pub display: String,
     pub bios_version: String,
     pub user_account: String,
@@ -43,7 +46,7 @@ impl SysResume {
             num_processors: sys.cpus().len(),
             processor_description: "Replace this with actual data".to_string(),
             total_memory: sys.total_memory(),
-            total_hard_drive: "Replace this with actual data".to_string(),
+            total_hard_drive: total_hard_drive_space(),
             display: "Replace this with actual data".to_string(),
             bios_version: "Replace this with actual data".to_string(),
             user_account: "Replace this with actual data".to_string(),
@@ -56,10 +59,28 @@ impl SysResume {
     pub fn get_sys_resume(&self) -> &Self {
         self
     }
+
+    // New method to save to JSON
+    pub fn save_to_json(&self, file_path: &str) -> std::io::Result<()> {
+        let serialized = serde_json::to_string_pretty(&self)?;
+        let mut file = File::create(file_path)?;
+        file.write_all(serialized.as_bytes())?;
+        Ok(())
+    }
 }
 
 impl Default for SysResume {
     fn default() -> Self {
         Self::new()
     }
+}
+
+fn total_hard_drive_space() -> u64 {
+    let disks = Disks::new_with_refreshed_list();
+    let mut tota_space_disks = 0u64;
+    for disk in &disks {
+        tota_space_disks += disk.total_space();
+    }
+
+    tota_space_disks
 }
