@@ -1,4 +1,4 @@
-use std::{fs::File, io::Write};
+use std::{fs::File, io::Write, process::Command};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -41,7 +41,7 @@ impl SysResume {
             operating_system: Some(System::os_version().unwrap_or_default()),
             manufacturer: "Replace this with actual data".to_string(),
             model: "Replace this with actual data".to_string(),
-            serial_number: System::distribution_id(),
+            serial_number: get_serial_number().expect("REASON"),
             asset_tag: "Replace this with actual data".to_string(),
             num_processors: sys.cpus().len(),
             processor_description: "Replace this with actual data".to_string(),
@@ -60,11 +60,17 @@ impl SysResume {
         self
     }
 
-    // New method to save to JSON
-    pub fn save_to_json(&self, file_path: &str) -> std::io::Result<()> {
+    pub fn save_to_json(&self, path: &str) -> std::io::Result<()> {
+        // Check if the last character of the path is a slash (/) or backslash (\) depending on your OS
+        // and append one if it's missing. This example uses `/` which is common for Unix-like systems.
+        let separator = if path.ends_with('/') { "" } else { "/" };
+        let file_name = format!("{}.json", &self.serial_number.replace(" ", "_")); // Replace spaces to avoid issues in filenames
+        let full_path = format!("{}{}{}", path, separator, file_name);
+
         let serialized = serde_json::to_string_pretty(&self)?;
-        let mut file = File::create(file_path)?;
+        let mut file = File::create(&full_path)?;
         file.write_all(serialized.as_bytes())?;
+
         Ok(())
     }
 }
@@ -83,4 +89,60 @@ fn total_hard_drive_space() -> u64 {
     }
 
     tota_space_disks
+}
+
+fn get_serial_number() -> Result<String, &'static str> {
+    #[cfg(target_os = "windows")]
+    {
+        let output = Command::new("cmd")
+            .args(&["/C", "wmic bios get serialnumber"])
+            .output()
+            .map_err(|_| "Failed to execute command")?;
+
+        let output_str = str::from_utf8(&output.stdout).map_err(|_| "Failed to parse output")?;
+        for line in output_str.lines() {
+            if !line.starts_with("SerialNumber") && !line.is_empty() {
+                return Ok(line.trim().to_string());
+            }
+        }
+        Err("Serial number not found")
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("dmidecode -s system-serial-number")
+            .output()
+            .map_err(|_| "Failed to execute command")?;
+
+        let output_str = std::str::from_utf8(&output.stdout).map_err(|_| "Failed to parse output")?;
+        println!("{:?}", output);
+        Ok(output_str.trim().to_string())
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        let output = Command::new("sh")
+            .arg("-c")
+            .arg("ioreg -l | grep IOPlatformSerialNumber")
+            .output()
+            .map_err(|_| "Failed to execute command")?;
+
+        let output_str = str::from_utf8(&output.stdout).map_err(|_| "Failed to parse output")?;
+        for line in output_str.lines() {
+            if line.contains("IOPlatformSerialNumber") {
+                let parts: Vec<&str> = line.split('=').collect();
+                if parts.len() > 1 {
+                    return Ok(parts[1].trim_matches(' ').trim_matches('"').to_string());
+                }
+            }
+        }
+        Err("Serial number not found")
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
+    {
+        Err("Unsupported OS")
+    }
 }

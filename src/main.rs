@@ -1,13 +1,20 @@
-use auditax::audit::SysResume;
+use std::process;
+
+use auditax::{
+    privilege::check_privileged, 
+    audit::SysResume};
 
 fn main() {
+    if !check_privileged() {
+        println!("This program must be run with privileged access.");
+        process::exit(1);
+    }
     let sys_resume = SysResume::default();
     println!("{:#?}", sys_resume);
 
-    // Specify the path to save the JSON file
-    let file_path = "system_resume.json";
-    sys_resume
-        .save_to_json(file_path)
-        .expect("Failed to save to JSON");
-    println!("System resume saved to {}", file_path);
+    // Specify the directory path where you want to save the JSON file
+    let path = "."; // Update this path as needed
+    sys_resume.save_to_json(path).expect("Failed to save to JSON");
+
+    println!("System resume saved successfully.");
 }
