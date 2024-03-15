@@ -1,54 +1,54 @@
 use chrono::{DateTime, Utc};
 use sysinfo::System;
 
+#[derive(Debug)] // Automatically derive Debug implementation
 pub struct SysResume {
-    computer_name:Option<String>,
-    domain_name: Option<String>,
-    site_name: String,
-    roles: Vec<String>,
-    description: String,
-    operating_system: Option<String>,
-    manufacturer: String,
-    model: String,
-    serial_number: String,
-    asset_tag: String,
-    num_processors: usize,
-    processor_description: String,
-    total_memory: u64,
-    total_hard_drive: String,
-    display: String,
-    bios_version: String,
-    user_account: String,
-    system_uptime: u64,
-    local_time: DateTime<Utc>,
+    pub computer_name: Option<String>,
+    pub domain_name: Option<String>,
+    pub site_name: String,
+    pub roles: Vec<String>,
+    pub description: String,
+    pub operating_system: Option<String>,
+    pub manufacturer: String,
+    pub model: String,
+    pub serial_number: String,
+    pub asset_tag: String,
+    pub num_processors: usize,
+    pub processor_description: String,
+    pub total_memory: u64,
+    pub total_hard_drive: String,
+    pub display: String,
+    pub bios_version: String,
+    pub user_account: String,
+    pub system_uptime: u64,
+    pub local_time: DateTime<Utc>,
 }
 
 impl SysResume {
-
     pub fn new() -> Self {
         let mut sys = System::new_all();
         sys.refresh_all();
-        
+
         SysResume {
-            computer_name: System::name(),
-            domain_name: System::host_name(),
-            site_name: todo!(),
-            roles: todo!(),
-            description: todo!(),
-            operating_system: System::os_version(),
-            manufacturer: todo!(),
-            model: todo!(),
+            computer_name: Some(System::name().unwrap_or_default()),
+            domain_name: Some(System::host_name().unwrap_or_default()),
+            site_name: "Replace this with actual data".to_string(),
+            roles: vec!["Replace this with actual data".to_string()],
+            description: "Replace this with actual data".to_string(),
+            operating_system: Some(System::os_version().unwrap_or_default()),
+            manufacturer: "Replace this with actual data".to_string(),
+            model: "Replace this with actual data".to_string(),
             serial_number: System::distribution_id(),
-            asset_tag: todo!(),
-            num_processors: todo!(),
-            processor_description: todo!(),
-            total_memory:  sys.total_memory(),
-            total_hard_drive: todo!(),
-            display: todo!(),
-            bios_version: todo!(),
-            user_account: todo!(),
+            asset_tag: "Replace this with actual data".to_string(),
+            num_processors: sys.cpus().len(),
+            processor_description: "Replace this with actual data".to_string(),
+            total_memory: sys.total_memory(),
+            total_hard_drive: "Replace this with actual data".to_string(),
+            display: "Replace this with actual data".to_string(),
+            bios_version: "Replace this with actual data".to_string(),
+            user_account: "Replace this with actual data".to_string(),
             system_uptime: System::uptime(),
-            local_time: chrono::DateTime::default(),
+            local_time: Utc::now(),
         }
     }
 
@@ -58,25 +58,8 @@ impl SysResume {
     }
 }
 
-println!("=> system:");
-// RAM and swap information:
-//println!("total memory: {} bytes", sys.total_memory());
-println!("used memory : {} bytes", sys.used_memory());
-println!("total swap  : {} bytes", sys.total_swap());
-println!("used swap   : {} bytes", sys.used_swap());
-
-// Display system information:
-println!("1) Résumé du Système :");
-//println!("System name:             {:?}", System::name());
-println!("System kernel version:   {:?}", System::kernel_version());
-println!("System OS version:       {:?}", System::os_version());
-println!("System host name:        {:?}", System::host_name());
-println!("System host boot time:   {:?}", System::boot_time());
-println!("System host long os name:   {:?}", System::long_os_version());
-println!("System host cpu arch:   {:?}", System::cpu_arch());
-println!("System host distribution id:   {:?}", System::distribution_id());
-//println!("System host uptaime:   {:?}", System::uptime());
-
-// Number of CPUs:
-println!("NB CPUs: {}", sys.cpus().len());
-
+impl Default for SysResume {
+    fn default() -> Self {
+        Self::new()
+    }
+}

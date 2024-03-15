@@ -1,11 +1,6 @@
-use sysinfo::{
-    get_current_pid, Components, Disks, Networks, System
-};
+use auditax::audit::SysResume;
 
-use auditax::audit::{self, SysResume};
 fn main() {
-    SysResume::new();
-    println!("{:?}",get_sys_resume);
-
+    let sys_resume = SysResume::default();
+    println!("{:#?}", sys_resume);
 }
-
